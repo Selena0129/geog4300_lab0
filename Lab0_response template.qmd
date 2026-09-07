@@ -37,14 +37,15 @@ You can load the tornado data (`noaa_stormevent_tornado_2026_08.csv` in the fold
 
 ```{r}
 #| label: Task1
+library(readr)
 
-read_csv("data/SVI_2022_US_county.csv")
-read_csv("data/stormevents/noaa_stormevent_tornado_2026_08.csv")
+data<-read.csv("data/SVI_2022_US_county.csv")
+#data<-read.csv("data/stormevents/noaa_stormevent_tornado_2026_08.csv")
 ```
 
 **Task 2:** *Pick two variables from either dataset that use different levels of measurement (nominal, ordinal, interval or ratio). Explain which level best describes each variable and why. Also identify one variable that would be more efficiently read as a factor, and explain why.*
 
-{Your explanation goes here.}
+The first variable I chose was "COUNTY" from the SVI_2022_US_county.csv file. It's level of measurement is nominal because county names cannot be arranged in a certain order, nor is there an agreed upon order they could be categorized by. The county names are just a list and cannot be used in calculations. The second variable I chose was "DAMAGE_PROPERTY" from the noaa_stormevent_tornado_2026_08.csv file. It's level of measurement is ratio because these numeric values [assuming we take the "K" off the end of each number] can make ratios, the difference between values have meaning, and the data can be put in order from highest to lowest or vice versa. 
 
 ## Filtering and/or summarizing the data
 
@@ -63,11 +64,23 @@ To do so, you'll need to:
 ```{r}
 #| label: Task3
 
-# Your code goes here.
-```
+library(dplyr)
+#I'm going to comment a few things during these tasks to keep track of what I'm doing just so you're aware. :)
+
+#First, using a filter function to only keep F3,F4,F5 tornadoes from "TOR_F_SCALE."
+TOR_F_SCALE<-data %>%
+filter(TOR_F_SCALE %in% c("F3", "F4", "F5")) %>%
+#Second, using the group function to group the data by the county and stata_fips, codes and names.
+group_by(STATE_FIPS, STATE, cty_fips, CZ_NAME) %>%
+#Third, using the summarise function to county the number of tornadoes in the groups. 
+summarise(TOR_F_SCALE = n())
+
+#I figured out that I couldn't run each line of code separately when using "%>%", or else I just get an error. Noting for next time.
+  ```
 
 You also want to filter the social vulnerability data so that it only includes counties with a population over 25,000 people. This allows us to only track counties with a moderate or large population. Use the SVI Documentation pdf in the data folder to determine which variable this is, recognizing that you want the **estimate** and not the margin of error (MOE).
 
+#The variable I want is "E_TOTPOP" -> this was on page 7 of the SVI pdf document. 
 Filter the data below.
 
 **Task 4:** *Filter the SVI data to include counties with a population of 25,000 or more.*
@@ -75,7 +88,10 @@ Filter the data below.
 ```{r}
 #| label: Task4
 
-# Your code goes here.
+#Using the filter function to include counties with a total population of 25000 or more. 
+
+E_TOTPOP<-data %>%
+  filter(E_TOTPOP >=25000)
 ```
 
 Let's add one more filter based on social vulnerability. When you look at the documentation there are a number of "dummy" variables (0/1) that flag counties that are at or above the 90th percentile for a number of factors. For example, `F_DISABL` flags counties in the top 10% for percentage of persons with a disability. There are also cumulative flags: `F_THEME2` sums all the flagged variables within the "Household Characteristics" category.
@@ -88,11 +104,15 @@ Filter the dataset you created in Task 4 so that it only includes counties you a
 
 ```{r}
 #| label: Task5
+#Choosing F_NOVEH, so for the filtered counties of only 25000+ people, keep on the counties that are flagged as being in the top 10% for households with vehicle access. The rows being marked with a "1" counts. May seem counter intuitive to pair vehicle and tornado, but people could drive to shelters when they know a tornado is coming. Using the filter function again here.
 
-# Your code goes here.
+F_NOVEH<-data %>%
+  filter(F_NOVEH == 1)
 ```
 
 Describe your variable, why you chose it, and (if applicable) why you chose the cutoff you did.
+
+I chose the variable "F_NOVEH" which flags the counties -- out of the ones with 25000 people or more -- within the 90th percentile or higher for the percentage of households with no access to a vehicle. I chose it because I wanted to pick something different from perhaps the "obvious" ones like mobile homes or disability vulnerabilities (and wanted to choose one that your mind maybe wouldn't immediately go too). "Vehicle" and "tornado" don't sounds good in the same sentence, so for this case, the people without access to a vehicle could mean one less option to reach a proper tornado shelter/the ability to evacuate a dangerous area. Counties that were flagged with a "1" were counted as vulnerable, so I don't think I needed to create an additional cutoff. 
 
 ## Connecting the data
 
@@ -101,7 +121,8 @@ Next you'll need to join these tornado counts to SVI population data using the `
 **NOTE:** You may need to change the name of the population data below to match the object you used for the SVI data.
 
 ```{r}
-svi <- svi %>%
+#Changed the given "svi" variable to my chosen variable "F_NOVEH." Then using the inner_join function below. 
+F_NOVEH <-F_NOVEH %>%
   rename(cty_fips = FIPS)
 ```
 
@@ -111,19 +132,33 @@ Call the function above to rename your data. Now you're ready to join the data.
 
 ```{r}
 #| label: Task6
-
-# Your code goes here.
+#Using the inner join function to join the the filtered tornado data and the county data (F_NOVEH). 
+joined_data<-inner_join(TOR_F_SCALE, F_NOVEH, by = "cty_fips")
 ```
 
 **Task 7:** *Find some documentation on the `inner_join()` function online or using help in R. Describe how it works, and explain how the results would have been different if you used `full_join()` instead.*
 
-{Write your response here.}
+
+```{r}
+?inner_join
+#Used the ?inner_join function to answer this question. 
+```
+The "inner_join" function two data sets based on matching columns, yet it only keeps the columns that have in common, leaves out the rest. This is not super applicable in most cases as it would be very easy to lose data that could be of value. In comparison with  "full_join," they combine both datasets without there having to be a match from the other dataset. Full joins would also contain "NA" values where a dataset did not have matching values. 
 
 ## Answering your research question
 
 **Task 8:** *Open up your joined dataset. Which three vulnerable counties have the highest number of severe tornadoes and how many were in each? Are there cities or other notable geographic features located in these counties?*
 
-{Write your response here.}
+```{r}
+joined_data <- joined_data %>%
+  arrange(desc(TOR_F_SCALE))
+#Either I missed something above in my code or something else... I used the arrange function to see the three vulnerable counties that have the higher number of severe tornadoes, they were not in order from just the joined data for some reason.
+```
+
+
+1. Caddo Parish County, Louisiana -- 10. In the northwest of the state, bordering Texas and Arkansas.
+2. Mississippi County, Arkansas -- 9. A relatively flat area, downslope of the Boston Mountains and Ouachita Mountains. 
+3. Woodruff County, Arkansas -- 9. Lies on the Ozark Plateau. 
 
 ## Challenge question
 
