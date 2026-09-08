@@ -170,10 +170,10 @@ Write your response here.
 
 **Disclosure of assistance:** Besides class materials, what other sources of assistance did you use while completing this lab? These can include input from classmates, relevant material identified through web searches (e.g., Stack Overflow), or assistance from ChatGPT or other AI tools. How did these sources support your own learning in completing this lab?
 
-Write your response here.
+I had some inputs from classmates outside of class. I also used AI assistance (ChatGPT) to tell me what exact R is doing when using certain functions when I couldn't remember what the core meaning was for a function. Using the AI assistance supported my learning of this new coding language greatly as I am now able to understand what R is doing behind the scene when I input certain functions. Getting input from other outside the class was helpful in the process of how to set up/work with GitHub Desktop and the whole pushing/editing process. 
 
 **Lab reflection:** How do you feel about the work you did on this lab? Was it easy, moderate, or hard? What are the biggest things you learned by completing it?
 
-Write your response here.
+On a scale of 1-10, I'd say a 6, and the work on this lab was moderate. It was not in the moderate category for the tasks themselves per say, more like I felt it took me extra time to get familiar with the basics of R (I am only used to python) and fully understand what the functions were doing. The biggest thing I learned during this lab was about myself actually. I have to slow down and really take the time to learn from mistakes while completing the assignment - trying to rush through something like this is NOT the way to go.  
 
 That's it! When you're done with this lab, use the Render command in Quarto to create a GitHub markdown document. Then push it to GitHub using the procedure outlined in this week's videos.
